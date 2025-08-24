@@ -31,9 +31,9 @@ class HomeLoad:
             return 0.5 + random.uniform(-0.1, 0.1)
         elif 15 <= hour < 18:  # Evening: snacks, prep dinner
             return 0.6 + random.uniform(-0.1, 0.1)
-        elif 18 <= hour < 21:  # Night: dinner, lighting, appliances
+        elif 18 <= hour < 23:  # Night: dinner, lighting, appliances (extended to 23:00)
             return 0.8 + random.uniform(-0.1, 0.1)
-        else:  # Late night & early morning
+        else:  # Late night & early morning (after 23:00 and before 6:00)
             return 0.2 + random.uniform(-0.05, 0.05)
 
     def weather_factor(self, temperature, humidity):
@@ -98,5 +98,7 @@ class HomeLoad:
 if __name__ == "__main__":
     home = HomeLoad(max_home_load=8, latitude=10.8505, longitude=76.2711)
     profile = home.generate_daily_load(datetime(2025, 8, 24))
-    for entry in profile[:10]:  # print first 10 intervals
-        print(entry)
+    for entry in profile:  # print first 10 intervals
+        t = entry['timestamp'].strftime("%H:%M")
+        load = entry['load_kW']
+        print(f"{t} - Load: {load} kW")
