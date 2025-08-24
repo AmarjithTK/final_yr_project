@@ -11,7 +11,7 @@ def get_season(month):
     elif month in [12, 1, 2]:
         return 'Winter'
 
-def simulate_weather(latitude, longitude, timestamp=None):
+def simulate_weather(timestamp=None):
     if timestamp is None:
         timestamp = datetime.now()
 
@@ -36,8 +36,6 @@ def simulate_weather(latitude, longitude, timestamp=None):
     return round(temperature, 2), round(humidity, 2)
 
 # Example usage
-latitude = 10.8505  # Example: Kochi
-longitude = 76.2711
 current_time = datetime(2025, 8, 24, 14, 0)  # August 24, 2025, 2:00 PM
-temperature, humidity = simulate_weather(latitude, longitude, current_time)
+temperature, humidity = simulate_weather(current_time)
 print(f"At {current_time}, the simulated temperature is {temperature}°C and humidity is {humidity}%.")

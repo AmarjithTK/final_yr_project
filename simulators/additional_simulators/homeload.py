@@ -4,17 +4,14 @@ from datetime import datetime, timedelta
 from weather import simulate_weather  # import your weather simulator
 
 class HomeLoad:
-    def __init__(self, max_home_load, latitude, longitude):
+    def __init__(self, max_home_load):
         """
         Initialize a HomeLoad simulator.
 
         Parameters:
         - max_home_load: float, maximum instantaneous load in kW
-        - latitude, longitude: for weather simulation
         """
         self.max_home_load = max_home_load
-        self.latitude = latitude
-        self.longitude = longitude
 
     def activity_factor(self, timestamp):
         """
@@ -69,7 +66,7 @@ class HomeLoad:
 
         while current_time < end_time:
             # Get weather at this timestamp
-            temp, hum = simulate_weather(self.latitude, self.longitude, current_time)
+            temp, hum = simulate_weather(current_time)  # latitude/longitude removed
 
             # Compute load factors
             activity = self.activity_factor(current_time)
@@ -93,12 +90,54 @@ class HomeLoad:
 
         return load_profile
 
+    def generate_instant_load(self, timestamp=None):
+        """
+        Generate the instantaneous load and weather at the given timestamp.
+        Returns a dict with load, temperature, humidity, and timestamp.
+        """
+        if timestamp is None:
+            timestamp = datetime.now()
+        temp, hum = simulate_weather(timestamp)  # latitude/longitude removed
+        activity = self.activity_factor(timestamp)
+        weather = self.weather_factor(temp, hum)
+        load = self.max_home_load * activity * weather
+        load += random.uniform(-0.05, 0.05) * self.max_home_load
+        load = max(0, load)
+        return {
+            'timestamp': timestamp,
+            'load_kW': round(load, 2),
+            'temperature_C': temp,
+            'humidity_%': hum
+        }
 
 # Example usage
-if __name__ == "__main__":
-    home = HomeLoad(max_home_load=8, latitude=10.8505, longitude=76.2711)
-    profile = home.generate_daily_load(datetime(2025, 8, 24))
-    for entry in profile:  # print first 10 intervals
-        t = entry['timestamp'].strftime("%H:%M")
-        load = entry['load_kW']
-        print(f"{t} - Load: {load} kW")
+# if __name__ == "__main__":
+#     home = HomeLoad(max_home_load=8)
+#     profile = home.generate_daily_load(datetime(2025, 8, 24))
+#     for entry in profile:  # print first 10 intervals
+#         t = entry['timestamp'].strftime("%H:%M")
+#         load = entry['load_kW']
+#         print(f"{t} - Load: {load} kW")
+
+# Generator function for driver
+def generate_data(device_id, device_type, max_home_load):
+    """
+    Returns a single payload for a home device.
+    Args:
+        device_id: str, unique device identifier
+        device_type: str, type of device (e.g., 'homeload')
+        max_home_load: float, maximum instantaneous load in kW
+    Returns:
+        dict with keys: device_id, device_type, active_power, timestamp
+    """
+    home = HomeLoad(max_home_load)
+    result = home.generate_instant_load()
+    return {
+        "device_id": device_id,
+        "device_type": device_type,
+        "active_power": result["load_kW"],
+        "timestamp": result["timestamp"].isoformat()
+    }
+
+
+print(generate_data("home1", "homeload", 8))
