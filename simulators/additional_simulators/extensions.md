@@ -19,4 +19,9 @@ Appliances: Motors, heaters, CNC machines, pumps, compressors.
 Often large and constant, can have reactive power components (inductive loads).
 
 
-3 types of load we are considering
+3 types of load we are considering home,industrial, commercial
+
+
+we need not go beyond this, 
+
+next we need
