@@ -1,0 +1,5 @@
+fixed a crucil error in traefik, 
+
+enabled nginx to go talk to traefik and then traefik used nginx proxy to talk to code server
+
+code server for me is up and online, i am working from there
