@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from influxdb_client import InfluxDBClient, Point
 import os, time
 import logging
-from typing import Literal
+from typing import Literal, Optional
 
 app = FastAPI()
 
@@ -31,6 +31,7 @@ logger.info("Using InfluxDB bucket: %s", bucket)
 class Measurement(BaseModel):
     device_id: str
     power: float
+    timestamp: Optional[str] = None  # ISO format string
 
 class FullDataTest(BaseModel):
     device_id: str
@@ -39,8 +40,16 @@ class FullDataTest(BaseModel):
     p: float
     q: float
     device_type: Literal['commercial', 'industrial', 'residential']
-    node: str  # e.g., "node1", "node2", etc.
+    node: str
     kwh: float
+    timestamp: Optional[str] = None  # ISO format string
+
+def iso_to_ns(iso_str: str) -> int:
+    # Convert ISO format string to nanoseconds since epoch
+    from datetime import datetime
+    import dateutil.parser
+    dt = dateutil.parser.isoparse(iso_str)
+    return int(dt.timestamp() * 1e9)
 
 @app.on_event("startup")
 def on_startup():
@@ -48,16 +57,20 @@ def on_startup():
 
 @app.post("/ingest")
 def ingest(measurement: Measurement):
-    logger.info("Received /ingest request: device_id=%s, power=%s", measurement.device_id, measurement.power)
+    logger.info("Received /ingest request: device_id=%s, power=%s, timestamp=%s", measurement.device_id, measurement.power, measurement.timestamp)
     try:
+        if measurement.timestamp:
+            point_time = iso_to_ns(measurement.timestamp)
+        else:
+            point_time = time.time_ns()
         point = Point("power") \
             .tag("device", measurement.device_id) \
             .field("p_active", measurement.power) \
-            .time(time.time_ns())
+            .time(point_time)
         logger.debug("Constructed InfluxDB Point: %s", point.to_line_protocol())
         write_api.write(bucket=bucket, record=point)
         logger.info("Successfully wrote data to InfluxDB for device_id=%s", measurement.device_id)
-        return {"status": "oksdgk", "device": measurement.device_id, "power": measurement.power}
+        return {"status": "ok", "device": measurement.device_id, "power": measurement.power}
     except Exception as e:
         logger.error("Failed to write to InfluxDB: %s", str(e), exc_info=True)
         return {"status": "error", "error": str(e)}
@@ -65,10 +78,14 @@ def ingest(measurement: Measurement):
 @app.post("/fulldatatest")
 def fulldatatest(data: FullDataTest):
     logger.info(
-        "Received /fulldatatest request: device_id=%s, v=%s, i=%s, p=%s, q=%s, device_type=%s, node=%s, kwh=%s",
-        data.device_id, data.v, data.i, data.p, data.q, data.device_type, data.node, data.kwh
+        "Received /fulldatatest request: device_id=%s, v=%s, i=%s, p=%s, q=%s, device_type=%s, node=%s, kwh=%s, timestamp=%s",
+        data.device_id, data.v, data.i, data.p, data.q, data.device_type, data.node, data.kwh, data.timestamp
     )
     try:
+        if data.timestamp:
+            point_time = iso_to_ns(data.timestamp)
+        else:
+            point_time = time.time_ns()
         point = (
             Point("full_data_test")
             .tag("device", data.device_id)
@@ -79,7 +96,7 @@ def fulldatatest(data: FullDataTest):
             .field("p", data.p)
             .field("q", data.q)
             .field("kwh", data.kwh)
-            .time(time.time_ns())
+            .time(point_time)
         )
         logger.debug("Constructed InfluxDB Point for /fulldatatest: %s", point.to_line_protocol())
         write_api.write(bucket=bucket, record=point)

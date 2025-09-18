@@ -52,33 +52,6 @@ def store_config(config):
     with open(CONFIG_PATH, "w") as f:
         json.dump(config, f, indent=2)
 
-def aggregate_15min(node, device_type):
-    limits = DEVICE_LIMITS[device_type]
-    total_p = 0
-    total_q = 0
-    total_seconds = 15 * 60
-    total_seconds = 2
-    v = round(random.uniform(*limits["v"]), 2)
-    i = round(random.uniform(*limits["i"]), 2)
-    for _ in range(total_seconds):
-        p_inst = random.uniform(*limits["p"])
-        q_inst = random.uniform(*limits["q"])
-        total_p += p_inst
-        total_q += q_inst
-        time.sleep(1)
-    avg_p = total_p / total_seconds
-    avg_q = total_q / total_seconds
-    kwh = (total_p / 3600000)  # kWh = sum(p) * seconds / 3.6e6
-    return {
-        "node": node,
-        "device_type": device_type,
-        "timestamp": datetime.now().isoformat(),
-        "v": v,
-        "i": i,
-        "p": round(avg_p, 2),
-        "q": round(avg_q, 2),
-        "kwh": round(kwh, 4)
-    }
 
 def store_aggregate(data):
     conn = sqlite3.connect(DB_PATH)
@@ -128,6 +101,7 @@ if __name__ == "__main__":
         v_vals = {node: round(random.uniform(*DEVICE_LIMITS[node_types[node]]["v"]), 2) for node in NODES}
         i_vals = {node: round(random.uniform(*DEVICE_LIMITS[node_types[node]]["i"]), 2) for node in NODES}
         total_seconds = 15 * 60
+        total_seconds =2
         for _ in range(total_seconds):
             for node in NODES:
                 limits = DEVICE_LIMITS[node_types[node]]
@@ -161,7 +135,7 @@ if __name__ == "__main__":
                 print(f"Error sending data: {e}")
         # If it's end of day (23:59), send verification
         now = datetime.now()
-        if now.hour == 23 and now.minute >= 59:
+        if now.hour == 23 and now.minute >= 50:
             send_verification()
         # Wait until next 15min slot
         next_slot = (now + timedelta(minutes=15)).replace(second=0, microsecond=0)
