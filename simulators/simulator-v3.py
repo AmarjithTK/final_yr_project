@@ -2,6 +2,16 @@ import requests
 import random
 import time
 
+
+
+# changes required
+
+proper 15 minutes time, 
+aggregating power instantaneous each second for 15 minutes
+storing total data in some database in proper format, may use sqlite
+sending verification request at the end of the day to overlap with the existing data
+
+
 API_URL = "https://apifinal.atherpulse.in/fulldatatest"
 
 DEVICE_TYPES = ["commercial", "industrial", "residential"]
