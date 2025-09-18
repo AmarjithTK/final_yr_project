@@ -1,0 +1,14 @@
+# Telegram Bot Token
+BOT_TOKEN=your_telegram_bot_token_here
+
+# Telegram Chat ID
+CHAT_ID=your_chat_id_here
+
+# Number of messages to send per day
+MESSAGES_PER_DAY=5
+
+# Start hour for reminders (24h format)
+START_HOUR=7
+
+# End hour for reminders (24h format, exclusive)
+END_HOUR=23

@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from influxdb_client import InfluxDBClient, Point
 import os, time
 import logging
+from typing import Literal
 
 app = FastAPI()
 
@@ -31,6 +32,16 @@ class Measurement(BaseModel):
     device_id: str
     power: float
 
+class FullDataTest(BaseModel):
+    device_id: str
+    v: float
+    i: float
+    p: float
+    q: float
+    device_type: Literal['commercial', 'industrial', 'residential']
+    node: str  # e.g., "node1", "node2", etc.
+    kwh: float
+
 @app.on_event("startup")
 def on_startup():
     logger.info("FastAPI application startup event triggered.")
@@ -51,3 +62,29 @@ def ingest(measurement: Measurement):
         logger.error("Failed to write to InfluxDB: %s", str(e), exc_info=True)
         return {"status": "error", "error": str(e)}
 
+@app.post("/fulldatatest")
+def fulldatatest(data: FullDataTest):
+    logger.info(
+        "Received /fulldatatest request: device_id=%s, v=%s, i=%s, p=%s, q=%s, device_type=%s, node=%s, kwh=%s",
+        data.device_id, data.v, data.i, data.p, data.q, data.device_type, data.node, data.kwh
+    )
+    try:
+        point = (
+            Point("full_data_test")
+            .tag("device", data.device_id)
+            .tag("device_type", data.device_type)
+            .tag("node", data.node)
+            .field("v", data.v)
+            .field("i", data.i)
+            .field("p", data.p)
+            .field("q", data.q)
+            .field("kwh", data.kwh)
+            .time(time.time_ns())
+        )
+        logger.debug("Constructed InfluxDB Point for /fulldatatest: %s", point.to_line_protocol())
+        write_api.write(bucket=bucket, record=point)
+        logger.info("Successfully wrote full data to InfluxDB for device_id=%s", data.device_id)
+        return {"status": "ok", "device": data.device_id}
+    except Exception as e:
+        logger.error("Failed to write full data to InfluxDB: %s", str(e), exc_info=True)
+        return {"status": "error", "error": str(e)}

@@ -44,3 +44,5 @@ nosetests.xml
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
+
+amardrop/

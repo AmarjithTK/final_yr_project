@@ -74,6 +74,41 @@ services:
       - "traefik.http.routers.grafana.entrypoints=websecure"
       - "traefik.http.routers.grafana.tls.certresolver=myresolver"
 
+  amardrop:
+    image: amarjith9801/amardrop:v2.0
+    container_name: amardrop
+    ports:
+      - "8005:8005"
+    volumes:
+      - ./amardrop/db:/app/db        # Mount database directory
+      - ./amardrop/uploads:/app/uploads  # Mount uploads directory
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.amardrop.rule=Host(`p.atherpulse.in`)"
+      - "traefik.http.routers.amardrop.entrypoints=websecure"
+      - "traefik.http.routers.amardrop.tls.certresolver=myresolver"
+
+  telegraf:
+    image: telegraf:latest
+    container_name: telegraf
+    depends_on:
+      - influxdb
+    environment:
+      - HOST_PROC=/host/proc
+      - HOST_SYS=/host/sys
+    volumes:
+      - ./telegraf:/etc/telegraf
+    
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.telegraf.rule=Host(`telegrafinal.atherpulse.in`)"
+      - "traefik.http.routers.telegraf.entrypoints=websecure"
+      - "traefik.http.routers.telegraf.tls.certresolver=myresolver"
+
 networks:
   web:
     external: false
