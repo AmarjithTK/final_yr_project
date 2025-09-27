@@ -4,7 +4,7 @@ import time
 import sqlite3
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 API_URL = "https://apifinal.atherpulse.in/fulldatatest"
 DB_PATH = "simulator_data.db"
@@ -92,16 +92,16 @@ if __name__ == "__main__":
     config = load_or_create_config()
     node_types = config["node_types"]
     while True:
-        # If you want to randomize node_types each day, uncomment below:
-        # node_types = {node: random.choice(DEVICE_TYPES) for node in NODES}
-        # config["node_types"] = node_types
-        # store_config(config)
-
         node_totals = {node: {"p": 0, "q": 0} for node in NODES}
         v_vals = {node: round(random.uniform(*DEVICE_LIMITS[node_types[node]]["v"]), 2) for node in NODES}
         i_vals = {node: round(random.uniform(*DEVICE_LIMITS[node_types[node]]["i"]), 2) for node in NODES}
         total_seconds = 15 * 60
-        total_seconds =2
+        total_seconds = 2  # For testing
+
+        # Generate a single UTC timestamp for all nodes, in ISO format with Z
+        utc_now = datetime.now(timezone.utc).replace(microsecond=0)
+        timestamp = utc_now.isoformat().replace("+00:00", "Z")  # e.g., '2025-09-18T09:41:34Z'
+
         for _ in range(total_seconds):
             for node in NODES:
                 limits = DEVICE_LIMITS[node_types[node]]
@@ -110,7 +110,7 @@ if __name__ == "__main__":
                 node_totals[node]["p"] += p_inst
                 node_totals[node]["q"] += q_inst
             time.sleep(1)
-        timestamp = datetime.now().isoformat()
+
         for node in NODES:
             limits = DEVICE_LIMITS[node_types[node]]
             avg_p = node_totals[node]["p"] / total_seconds
@@ -119,7 +119,7 @@ if __name__ == "__main__":
             agg = {
                 "node": node,
                 "device_type": node_types[node],
-                "timestamp": timestamp,
+                "timestamp": timestamp,  # <-- Consistent UTC timestamp for all nodes
                 "v": v_vals[node],
                 "i": i_vals[node],
                 "p": round(avg_p, 2),
@@ -133,11 +133,48 @@ if __name__ == "__main__":
                 print(f"Sent: {agg} | Response: {response.status_code}")
             except Exception as e:
                 print(f"Error sending data: {e}")
-        # If it's end of day (23:59), send verification
+
         now = datetime.now()
         if now.hour == 23 and now.minute >= 50:
             send_verification()
-        # Wait until next 15min slot
         next_slot = (now + timedelta(minutes=15)).replace(second=0, microsecond=0)
         sleep_time = (next_slot - datetime.now()).total_seconds()
-        time.sleep(max(sleep_time, 0))
+        # time.sleep(max(sleep_time, 0))
+        time.sleep(2)
+
+
+
+# penalty conditions
+# in domen=stic no penalty 
+#  pf < 095 pentality
+# pf < 090 penalty 1
+# pf < 085 penalty 2
+# pf < 080 penalty 3
+
+# penalty for residential 
+
+#weekend and weekdays graph
+#monthly and yearly graph
+
+
+#6-7 slides
+
+
+#, I , cospi
+
+#power factor measurement board
+
+
+#flow chart
+
+#prediction flowchart
+
+#errors and corrections we need to use
+
+#sinewave to square wave
+
+
+#real power , reactive powe 
+
+#these 
+
