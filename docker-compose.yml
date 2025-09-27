@@ -4,6 +4,7 @@ services:
   traefik:
     image: traefik:latest
     container_name: traefik
+    restart: unless-stopped
     command:
       - "--api.insecure=true"
       - "--providers.docker=true"
@@ -31,6 +32,7 @@ services:
   influxdb:
     image: influxdb:2.7
     container_name: influxdb
+    restart: unless-stopped
     volumes:
       - ./influxdb:/var/lib/influxdb2
     environment:
@@ -51,6 +53,7 @@ services:
   fastapi:
     build: ./api
     container_name: fastapi
+    restart: unless-stopped
     networks:
       - web
     volumes:
@@ -64,6 +67,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
+    restart: unless-stopped
     volumes:
       - ./grafana:/var/lib/grafana
     networks:
@@ -77,6 +81,7 @@ services:
   amardrop:
     image: amarjith9801/amardrop:v2.0
     container_name: amardrop
+    restart: unless-stopped
     ports:
       - "8005:8005"
     volumes:
@@ -93,11 +98,12 @@ services:
   telegraf:
     image: telegraf:latest
     container_name: telegraf
+    restart: unless-stopped
     depends_on:
       - influxdb
-    environment:
-      - HOST_PROC=/host/proc
-      - HOST_SYS=/host/sys
+    # environment:
+      # - HOST_PROC=/host/proc
+      # - HOST_SYS=/host/sys
     volumes:
       - ./telegraf:/etc/telegraf
     
