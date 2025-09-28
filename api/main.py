@@ -25,7 +25,7 @@ client = InfluxDBClient(
 )
 
 write_api = client.write_api()
-bucket = os.getenv("INFLUX_BUCKET", "energy")
+bucket = os.getenv("INFLUX_BUCKET", "energy3")
 logger.info("Using InfluxDB bucket: %s", bucket)
 
 class Measurement(BaseModel):
@@ -34,18 +34,16 @@ class Measurement(BaseModel):
     timestamp: Optional[str] = None  # ISO format string
 
 class FullDataTest(BaseModel):
-    device_id: str
+    node: str
+    device_type: Literal['commercial', 'industrial', 'residential']
+    timestamp: Optional[str] = None  # ISO format string
     v: float
     i: float
     p: float
     q: float
-    device_type: Literal['commercial', 'industrial', 'residential']
-    node: str
     kwh: float
-    timestamp: Optional[str] = None  # ISO format string
 
 def iso_to_ns(iso_str: str) -> int:
-    # Convert ISO format string to nanoseconds since epoch
     from datetime import datetime
     import dateutil.parser
     dt = dateutil.parser.isoparse(iso_str)
@@ -78,8 +76,8 @@ def ingest(measurement: Measurement):
 @app.post("/fulldatatest")
 def fulldatatest(data: FullDataTest):
     logger.info(
-        "Received /fulldatatest request: device_id=%s, v=%s, i=%s, p=%s, q=%s, device_type=%s, node=%s, kwh=%s, timestamp=%s",
-        data.device_id, data.v, data.i, data.p, data.q, data.device_type, data.node, data.kwh, data.timestamp
+        "Received /fulldatatest request: node=%s, device_type=%s, timestamp=%s, v=%s, i=%s, p=%s, q=%s, kwh=%s",
+        data.node, data.device_type, data.timestamp, data.v, data.i, data.p, data.q, data.kwh
     )
     try:
         if data.timestamp:
@@ -87,8 +85,7 @@ def fulldatatest(data: FullDataTest):
         else:
             point_time = time.time_ns()
         point = (
-            Point("full_data_test")
-            .tag("device", data.device_id)
+            Point("fulldatatestv2")
             .tag("device_type", data.device_type)
             .tag("node", data.node)
             .field("v", data.v)
@@ -100,8 +97,8 @@ def fulldatatest(data: FullDataTest):
         )
         logger.debug("Constructed InfluxDB Point for /fulldatatest: %s", point.to_line_protocol())
         write_api.write(bucket=bucket, record=point)
-        logger.info("Successfully wrote full data to InfluxDB for device_id=%s", data.device_id)
-        return {"status": "ok", "device": data.device_id}
+        logger.info("Successfully wrote full data to InfluxDB for node=%s", data.node)
+        return {"status": "ok", "node": data.node}
     except Exception as e:
         logger.error("Failed to write full data to InfluxDB: %s", str(e), exc_info=True)
         return {"status": "error", "error": str(e)}

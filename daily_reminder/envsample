@@ -12,3 +12,4 @@ START_HOUR=7
 
 # End hour for reminders (24h format, exclusive)
 END_HOUR=23
+GOOGLE_API_KEY=your_google_api_key_here
