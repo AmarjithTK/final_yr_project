@@ -2,17 +2,24 @@ import os
 import torch
 
 # Set this to True if running locally, False if running in Colab/Drive
-LOCAL_RUN = False
+LOCAL_RUN = True
 
 # Google Drive base path for persistent storage
-BASE_PATH = "/content/drive/My Drive/colab_persistent_storage"
-os.makedirs(BASE_PATH, exist_ok=True)
 
 # Data and model configuration
 if LOCAL_RUN:
+    BASE_PATH = "./"
+
     CSV_FILE = "../../datasets/residential_3months.csv"
 else:
+    BASE_PATH = "/content/drive/My Drive/colab_persistent_storage"
+
     CSV_FILE = "datasets/residential_3months.csv"
+
+
+os.makedirs(BASE_PATH, exist_ok=True)
+
+
 
 LOOKBACK = 24
 BATCH_SIZE = 32
