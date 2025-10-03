@@ -135,7 +135,7 @@ if __name__ == "__main__":
                 print(f"Error sending data: {e}")
 
         now = datetime.now()
-        if now.hour == 23 and now.minute >= 50:
+        if now.hour == 23 and now.minute == 50:
             send_verification()
         next_slot = (now + timedelta(minutes=15)).replace(second=0, microsecond=0)
         sleep_time = (next_slot - datetime.now()).total_seconds()
