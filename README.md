@@ -1,5 +1,12 @@
 
 
+
+
+python -m ipykernel install --user --name=my_venv --display-name "Python (my_venv)"
+
+
+
+
 20 sept 2025
 
 time to generate a long dataset

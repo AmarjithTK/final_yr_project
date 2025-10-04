@@ -186,6 +186,23 @@ if __name__ == "__main__":
     train_and_evaluate()
 
     # To predict for new timestamps:
-    # Suppose you have a DataFrame `future_df` with columns ['timestamp', 'P', 'Q']
-    # pred_df = predict_pq_for_timestamps(future_df)
-    # print(pred_df)
+    # Create a sample future DataFrame with dummy data for demonstration
+    import datetime
+
+    # Generate 30 minutes of future timestamps (2 samples, 15 min interval)
+    last_time = pd.Timestamp("2023-01-01 00:00:00")
+    timestamps = [last_time + datetime.timedelta(minutes=15 * i) for i in range(26)]  # 26 for lookback + 1
+
+    # Dummy P and Q values (replace with real data as needed)
+    P_values = np.linspace(100, 120, 26)
+    Q_values = np.linspace(50, 60, 26)
+
+    future_df = pd.DataFrame({
+        "timestamp": timestamps,
+        "P": P_values,
+        "Q": Q_values
+    })
+
+    # Call the prediction function
+    pred_df = predict_pq_for_timestamps(future_df)
+    print(pred_df)
