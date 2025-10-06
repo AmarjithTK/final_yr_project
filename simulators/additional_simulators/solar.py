@@ -43,3 +43,4 @@ for h in range(0, 24):
     for m in range(0, 60, 15):
         t = datetime(2025, 8, 24, h, m)
         print(f"{t.hour:02d}:{t.minute:02d} -> Solar Power: {solar_power(max_solar, t)} kW")
+        
