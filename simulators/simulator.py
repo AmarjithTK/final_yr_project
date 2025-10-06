@@ -1,6 +1,8 @@
 import requests, random, time
 
-API="http://localhost:8000/ingest"
+# API="http://localhost:8000/ingest"
+API="https://apifinal.atherpulse.in/ingest"
+
 DEVICES=["home1","home2","home3","home4","home5"]
 
 while True:

@@ -1,44 +1,120 @@
 version: "3.9"
+
 services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.directory=/dynamic"
+      - "--providers.file.watch=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=${TRAEFIK_ACME_EMAIL}"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8081:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+      - ./traefik/dynamic:/dynamic
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - web
+
   influxdb:
     image: influxdb:2.7
-    ports:
-      - "8086:8086"
+    container_name: influxdb
+    restart: unless-stopped
     volumes:
-      - influxdb:/var/lib/influxdb2
+      - ./influxdb:/var/lib/influxdb2
     environment:
-    - DOCKER_INFLUXDB_INIT_MODE=setup
-    - DOCKER_INFLUXDB_INIT_USERNAME=admin
-    - DOCKER_INFLUXDB_INIT_PASSWORD=admin123
-    - DOCKER_INFLUXDB_INIT_ORG=myorg
-    - DOCKER_INFLUXDB_INIT_BUCKET=energy
-    - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-auth-token
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN}
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.influx.rule=Host(`influxfinal.atherpulse.in`)"
+      - "traefik.http.routers.influx.entrypoints=websecure"
+      - "traefik.http.routers.influx.tls.certresolver=myresolver"
 
   fastapi:
     build: ./api
-    ports:
-      - "8000:8000"
-    environment:
-      - INFLUX_URL=http://influxdb:8086
-      # Use the token you defined above
-      - INFLUX_TOKEN=my-super-secret-auth-token
-      - INFLUX_ORG=myorg
-      - INFLUX_BUCKET=energy
-    depends_on:
-      - influxdb
+    container_name: fastapi
+    restart: unless-stopped
+    networks:
+      - web
+    volumes:
+      - ./api:/app     
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`apifinal.atherpulse.in`)"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=myresolver"
 
   grafana:
     image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    volumes:
+      - ./grafana:/var/lib/grafana
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafanafinal.atherpulse.in`)"
+      - "traefik.http.routers.grafana.entrypoints=websecure"
+      - "traefik.http.routers.grafana.tls.certresolver=myresolver"
+
+  amardrop:
+    image: amarjith9801/amardrop:v2.0
+    container_name: amardrop
+    restart: unless-stopped
     ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - "8005:8005"
+    volumes:
+      - ./amardrop/db:/app/db        # Mount database directory
+      - ./amardrop/uploads:/app/uploads  # Mount uploads directory
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.amardrop.rule=Host(`p.atherpulse.in`)"
+      - "traefik.http.routers.amardrop.entrypoints=websecure"
+      - "traefik.http.routers.amardrop.tls.certresolver=myresolver"
+
+  telegraf:
+    image: telegraf:latest
+    container_name: telegraf
+    restart: unless-stopped
     depends_on:
       - influxdb
+    # environment:
+      # - HOST_PROC=/host/proc
+      # - HOST_SYS=/host/sys
     volumes:
-      - grafana:/var/lib/grafana
+      - ./telegraf:/etc/telegraf
+    
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.telegraf.rule=Host(`telegrafinal.atherpulse.in`)"
+      - "traefik.http.routers.telegraf.entrypoints=websecure"
+      - "traefik.http.routers.telegraf.tls.certresolver=myresolver"
 
-volumes:
-  influxdb:
-  grafana:
+networks:
+  web:
+    external: false

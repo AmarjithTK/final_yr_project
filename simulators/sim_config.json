@@ -1,0 +1,7 @@
+{
+  "node_types": {
+    "node1": "industrial",
+    "node2": "residential",
+    "node3": "commercial"
+  }
+}

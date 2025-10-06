@@ -17,6 +17,6 @@ COPY main.py .
 # 4. Expose the port the app runs on
 EXPOSE 8000
 
-# 5. Specify the command to run the application
-# Uvicorn is the ASGI server that will run the FastAPI app
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# 5. Specify the command to run the application with auto-reload
+# Uvicorn will watch for changes in main.py and reload automatically
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

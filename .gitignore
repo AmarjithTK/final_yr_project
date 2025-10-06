@@ -1,0 +1,48 @@
+grafana/
+influxdb/
+letsencrypt/
+traefik/
+.env
+
+# Python cache and artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pytest_cache/
+*.egg-info/
+*.egg
+*.env
+.env.*
+.venv/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# VSCode and editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS and Linux system files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test and coverage outputs
+htmlcov/
+.tox/
+.coverage
+coverage.xml
+.cache/
+nosetests.xml
+*.cover
+*.py,cover
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+amardrop/
