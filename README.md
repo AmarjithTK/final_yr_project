@@ -27,3 +27,8 @@ tried and failed cloudflare tunnels, now focusing on the vscode remote tunnels
 it works flawlessly but consumes lot of memory, that is intense, means 2gb of system atleast needed for remote coding, and some docker stack
 
 diagrams from draw.io to be included
+
+collaborators
+
+Amarjith
+Cherin
