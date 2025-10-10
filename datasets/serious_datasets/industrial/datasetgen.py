@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 # ============================================================================
 # CONFIGURATION - Modify these parameters as needed
 # ============================================================================
-TOTAL_DAYS = 90  # Number of days to generate data for
+TOTAL_DAYS = 5  # Number of days to generate data for
 INTERVAL_MINUTES = 15  # Time resolution
 INTERVALS_PER_DAY = 96  # 24 hours * 4 intervals per hour
 

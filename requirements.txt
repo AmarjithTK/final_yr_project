@@ -2,3 +2,4 @@ fastapi
 uvicorn[standard]
 influxdb-client
 requests
+pandas
