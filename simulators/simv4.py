@@ -36,16 +36,25 @@ def setup_db():
     conn.commit()
     conn.close()
 
+def get_offset(node):
+    # Assign offsets so ranges don't overlap
+    offsets = {
+        "node1": 0,      # residential
+        "node2": 12000,  # commercial
+        "node3": 60000   # industrial
+    }
+    return offsets[node]
+
 def load_or_create_config():
-    if os.path.exists(CONFIG_PATH):
-        with open(CONFIG_PATH, "r") as f:
-            config = json.load(f)
-    else:
-        # Generate random node_types and save
-        node_types = {node: random.choice(DEVICE_TYPES) for node in NODES}
-        config = {"node_types": node_types}
-        with open(CONFIG_PATH, "w") as f:
-            json.dump(config, f, indent=2)
+    # Explicitly set node types
+    node_types = {
+        "node1": "residential",
+        "node2": "commercial",
+        "node3": "industrial"
+    }
+    config = {"node_types": node_types}
+    with open(CONFIG_PATH, "w") as f:
+        json.dump(config, f, indent=2)
     return config
 
 def store_config(config):
@@ -95,18 +104,17 @@ if __name__ == "__main__":
         node_totals = {node: {"p": 0, "q": 0} for node in NODES}
         v_vals = {node: round(random.uniform(*DEVICE_LIMITS[node_types[node]]["v"]), 2) for node in NODES}
         i_vals = {node: round(random.uniform(*DEVICE_LIMITS[node_types[node]]["i"]), 2) for node in NODES}
-        total_seconds = 15 * 60
         total_seconds = 2  # For testing
 
-        # Generate a single UTC timestamp for all nodes, in ISO format with Z
         utc_now = datetime.now(timezone.utc).replace(microsecond=0)
-        timestamp = utc_now.isoformat().replace("+00:00", "Z")  # e.g., '2025-09-18T09:41:34Z'
+        timestamp = utc_now.isoformat().replace("+00:00", "Z")
 
         for _ in range(total_seconds):
             for node in NODES:
                 limits = DEVICE_LIMITS[node_types[node]]
-                p_inst = random.uniform(*limits["p"])
-                q_inst = random.uniform(*limits["q"])
+                offset = get_offset(node)
+                p_inst = random.uniform(*limits["p"]) + offset
+                q_inst = random.uniform(*limits["q"]) + offset // 2
                 node_totals[node]["p"] += p_inst
                 node_totals[node]["q"] += q_inst
             time.sleep(1)
@@ -119,7 +127,7 @@ if __name__ == "__main__":
             agg = {
                 "node": node,
                 "device_type": node_types[node],
-                "timestamp": timestamp,  # <-- Consistent UTC timestamp for all nodes
+                "timestamp": timestamp,
                 "v": v_vals[node],
                 "i": i_vals[node],
                 "p": round(avg_p, 2),
@@ -139,7 +147,6 @@ if __name__ == "__main__":
             send_verification()
         next_slot = (now + timedelta(minutes=15)).replace(second=0, microsecond=0)
         sleep_time = (next_slot - datetime.now()).total_seconds()
-        # time.sleep(max(sleep_time, 0))
         time.sleep(2)
 
 
@@ -176,5 +183,5 @@ if __name__ == "__main__":
 
 #real power , reactive powe 
 
-#these 
+#these
 
