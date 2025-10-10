@@ -25,7 +25,7 @@ client = InfluxDBClient(
 )
 
 write_api = client.write_api()
-bucket = os.getenv("INFLUX_BUCKET", "energy3")
+bucket = os.getenv("INFLUX_BUCKET", "energy4")
 logger.info("Using InfluxDB bucket: %s", bucket)
 
 class Measurement(BaseModel):
