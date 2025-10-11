@@ -12,8 +12,8 @@ INFLUXDB_TOKEN = os.environ.get("INFLUXCLIENT") or os.environ.get("INFLUXDB_TOKE
 INFLUXDB_URL = os.environ.get("INFLUXDB_URL") or "https://influxfinal.atherpulse.in"
 INFLUXDB_ORG = "myorg"
 BUCKET = "energy4"
-CSV_PATH = "./serious_datasets/industrial/industrial_load_data_90days.csv"
-POINT_NAME = "industrialdataset2"
+CSV_PATH = "/home/amarjith/codespaces/final_yr_project/datasets/training_datasets/residential/residential_load_data_typical_3person_3.5kW_90days_summer.csv"
+POINT_NAME = "residentialdataset2"
 
 logging.basicConfig(
     level=logging.DEBUG,
