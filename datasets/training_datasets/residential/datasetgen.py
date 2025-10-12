@@ -6,10 +6,13 @@ import pytz
 # ============================================================================
 # CONFIGURATION - Modify these parameters as needed
 # ============================================================================
-START_DATE = datetime(2025, 1, 1, 0, 0, 0)  # Start date for data generation
+START_DATE = datetime(2025, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)  # Start date (UTC)
 DAYS_TO_GEN = 90  # Number of days to generate data for
 INTERVAL_MINUTES = 15  # Time resolution
 INTERVALS_PER_DAY = 96  # 24 hours * 4 intervals per hour
+
+# Output timestamp format compatible with InfluxDB / Grafana (RFC3339 / Zulu)
+OUTPUT_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 # Residential household parameters (Single-phase)
 HOUSEHOLD_TYPE = "typical_3person"
@@ -296,12 +299,11 @@ def main():
     
     start_time = datetime.now()
     
-    # Generate timestamp array with timezone
+    # Generate timestamp array with timezone-aware UTC datetimes
     timestamps = []
     for i in range(DAYS_TO_GEN * INTERVALS_PER_DAY):
-        ts = START_DATE + timedelta(minutes=INTERVAL_MINUTES * i)
-        ts_with_tz = TIMEZONE.localize(ts) if TIMEZONE.zone != 'UTC' else ts.replace(tzinfo=pytz.UTC)
-        timestamps.append(ts_with_tz)
+        ts = START_DATE + timedelta(minutes=INTERVAL_MINUTES * i)  # tz-aware UTC
+        timestamps.append(ts)
     
     # Initialize data storage
     data = {
@@ -359,8 +361,9 @@ def main():
         # Calculate 15-minute energy
         kwh_15min = power_kw * 0.25
         
-        # Store data with RFC3339 formatted timestamp for InfluxDB/Grafana
-        data['timestamp'].append(ts.isoformat())
+        # Store timestamp in RFC3339 'Z' format (Influx/Grafana friendly, UTC)
+        ts_utc = ts.astimezone(pytz.UTC)
+        data['timestamp'].append(ts_utc.strftime(OUTPUT_TIME_FORMAT))
         data['voltage'].append(round(voltage, 2))
         data['current'].append(round(current, 2))
         data['power_factor'].append(round(pf, 4))
