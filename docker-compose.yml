@@ -95,25 +95,7 @@ services:
       - "traefik.http.routers.amardrop.entrypoints=websecure"
       - "traefik.http.routers.amardrop.tls.certresolver=myresolver"
 
-  telegraf:
-    image: telegraf:latest
-    container_name: telegraf
-    restart: unless-stopped
-    depends_on:
-      - influxdb
-    # environment:
-      # - HOST_PROC=/host/proc
-      # - HOST_SYS=/host/sys
-    volumes:
-      - ./telegraf:/etc/telegraf
-    
-    networks:
-      - web
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.telegraf.rule=Host(`telegrafinal.atherpulse.in`)"
-      - "traefik.http.routers.telegraf.entrypoints=websecure"
-      - "traefik.http.routers.telegraf.tls.certresolver=myresolver"
+
 
 networks:
   web:
