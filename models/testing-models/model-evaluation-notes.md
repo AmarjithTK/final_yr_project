@@ -42,3 +42,22 @@ Even though the *Blue Dashed Line* misses the top of the spikes, the **Light Blu
     * *Logic:* "I will schedule the battery assuming the load might hit the top of that blue band. If it doesn't, great—we have extra power. If it does, we are safe."
 
 **Verdict:** Do not retrain. This model is ready for the optimization phase. It provides exactly the safety margins required for a high-level engineering thesis.
+
+
+Yes, exactly. To be mathematically precise, the **dashed blue line** in your specific model is the **Median**, not the Average (Mean), but they serve a very similar purpose.
+
+Here is the engineering distinction and why your model chose the Median:
+
+### 1. The Dashed Blue Line = The "Median" (50th Percentile)
+In your code, you set `QUANTILES: [0.1, 0.5, 0.9]`.
+* The middle quantile (`0.5`) forces the model to find the value where **50% of the time the real load is higher, and 50% of the time it is lower**.
+* **Why this is better than Average:** The "Average" gets pulled around by crazy outliers. If you have ten readings of `100W` and one reading of `5000W` (a sensor glitch), the **Average** shoots up to `545W`. The **Median** stays at `100W`.
+* **For your project:** This makes your controller **robust**. It ignores the crazy one-off spikes (glitches) and tracks the "real" center of the data.
+
+### 2. Is it "somewhat like the average"?
+**Yes.**
+Visually, they look almost identical. Both the Average and the Median act as a **Low-Pass Filter**. They draw a smooth line through the middle of the noisy zig-zag black line.
+
+### 3. Summary for your Defense
+If a professor asks, *"Is this just the average?"*, you can say:
+> "It is similar to a moving average, but technically it is the **Median (50th Percentile)**. I used this because it is more robust to sensor outliers than the mean, ensuring the battery doesn't react to false spikes."
