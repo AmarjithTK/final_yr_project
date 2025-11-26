@@ -4,6 +4,10 @@ letsencrypt/
 traefik/
 .env
 
+myenv/
+
+myenv/*
+
 # Python cache and artifacts
 __pycache__/
 *.pyc
