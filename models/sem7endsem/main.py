@@ -125,11 +125,13 @@ class LSTMModel(nn.Module):
     def __init__(self, input_dim, output_dim):
         super(LSTMModel, self).__init__()
         self.lstm = nn.LSTM(input_dim, CONFIG['HIDDEN_SIZE'], batch_first=True)
+        self.dropout = nn.Dropout(0.2)
         self.fc = nn.Linear(CONFIG['HIDDEN_SIZE'], CONFIG['HORIZON'] * output_dim)
         self.output_dim = output_dim
     def forward(self, x):
         out, _ = self.lstm(x)
-        out = self.fc(out[:, -1, :])
+        out = self.dropout(out[:, -1, :])
+        out = self.fc(out)
         return out.view(-1, CONFIG['HORIZON'], self.output_dim)
 
 def train_model(X_train, y_train, X_val, y_val, loss_type='mse'):
@@ -140,7 +142,7 @@ def train_model(X_train, y_train, X_val, y_val, loss_type='mse'):
     val_loader = DataLoader(val_ds, batch_size=CONFIG['BATCH_SIZE'], shuffle=False)
 
     model = LSTMModel(input_dim=2, output_dim=2).to(CONFIG['DEVICE'])
-    opt = torch.optim.Adam(model.parameters(), lr=CONFIG['LR'])
+    opt = torch.optim.Adam(model.parameters(), lr=CONFIG['LR'], weight_decay=1e-5)
 
     if loss_type == 'mae': crit = nn.L1Loss()
     elif loss_type == 'mse': crit = nn.MSELoss()
